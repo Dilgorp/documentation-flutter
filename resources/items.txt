@@ -1,0 +1,321 @@
+1. Синхронное (ручки)
+// InvoiceSrvController
+1.1 Отправка СМС на оплату по nonbId
+- сервис КУ - Mediator;
+- этап заявки КУ - Для услуги ДКП отправка на статусе DRAFT, для остальных на SERVICES_PAYMENT;
+- InvoiceSrvController
+- POST
+- /deals/{nonbId}/payments/{paymentId}/sms
+- InvoiceService.sendSmsByNonbDealId
+- возвращает: успешность выполнения, телефон (при успешном выполнении), время, через которое можно снова пробовать отправить с секундах
+- Изменения:
+Если в dto переданы данные плательщика (personId и versionId), они обновляются
+Если данные плательщика не переданы, идет попытка обновить плательщика по покупателю в сделке (для неипотеки).
+Если статус платежа OFFERED, меняется на NOT_PAID.
+Синхронисируется с данными из Pay.
+Отправляется смс (при необходимости создается платеж в Pay).
+
+1.2 Скачивание квитанции на оплату
+- сервис КУ - Document;
+- этап заявки КУ - генерация происходит при уходе со статуса SIGNING_OFFER;
+- InvoiceSrvController
+- POST
+- /deals/{nonbId}/payments/{paymentId}/receipt
+- InvoiceService.generateReceiptByNonbDealId
+- возвращает: массив байт файла квитанции
+- Изменения:
+Если статус платежа OFFERED, меняется на NOT_PAID.
+Синхронисируется с данными из Pay.
+Получает из Pay квитанцию об оплате (при необходимости создается платеж в Pay).
+
+1.3 Регистрация платежа в Pay
+- сервис КУ  - В КУ не используется;
+- этап заявки КУ ;
+- InvoiceSrvController
+- POST
+- /deals/{nonbId}/payments/{paymentId}/pay/payment 
+
+- InvoiceService.registerPaymentInPay
+- возвращает: Идентифиактор в Pay
+- Изменения:
+Создает платеж в Pay. Если платеж уже создан, возвращает его идентификатор.
+
+// PaymentSrvController
+1.4 Получение данных по платежам
+- сервис КУ - В КУ не используется;
+- этап заявки КУ;
+- PaymentSrvController
+- GET
+- /deals/{nonbId}/payments 
+
+
+- PaymentService.getPaymentsByNonbId
+- возвращает: Список платежей по nonbId
+
+1.5 Получение данных по активным платежам
+- сервис КУ - Validator, Mediator
+- этап заявки КУ;
+- PaymentSrvController
+- GET
+- /deals/{nonbId}/payments/active
+- PaymentService.getPaymentsByNonbId
+- возвращает: Список сокращенных данных по платежам
+
+1.6 Наличие согласия на пакет
+- сервис КУ - Mediator
+- этап заявки КУ;
+- PaymentSrvController
+- GET
+- /deals/{nonbId}/payments/has-package
+- PaymentService.checkHasPackageByNonbId
+- возвращает: Возвращает true, если в сделке есть платеж с типом PACKAGE, иначе возвращает false.
+
+1.7 Пересчет номеров оферт СЭР и СБР
+- сервис КУ - Orchestrator
+- этап заявки КУ;
+- PaymentSrvController
+- PATCH
+- /deals/payments/number/recalculate
+- NumberOfferService.recalculateByNonbDealIds
+- возвращает: Возвращает список типов платежей (для каждого из переданных nonbId) и соотвествующие им номера.
+- Изменения:
+Генерируются / пересчитываются номера (записываются в БД).
+
+1.8 Получение детальной информации по платежу
+- сервис КУ - Orchestrator
+- этап заявки КУ;
+- PaymentSrvController
+- GET
+- /deals/{nonbId}/payments/details
+- PriceService.getPaymentDetails
+- возвращает: Возвращает разбивку цены платежа по составляющим
+
+1.9 Сброс плательщика
+- сервис КУ - Orchestrator
+- этап заявки КУ;
+- PaymentSrvController
+- PATCH
+- /deals/{nonbId}/payments/reset/payers/details
+- PaymentService.resetPayer
+- возвращает: Ничего
+- Изменения:
+Для платежей с переданными идентификаторами сбрасываются значения полей nonbParticipantId, personId, versionId
+
+1.10 Установка типа оплаты и плательщика
+- сервис КУ - Orchestrator
+- этап заявки КУ;
+- PaymentSrvController
+- PATCH
+- /deals/{nonbId}/payments/{paymentId}/pay/details
+- PaymentDataPreparerService.patchPayerAndPayType
+- возвращает: Ничего
+- Изменения:
+Устанавливает для платежа значения полей payType, nonbParticipantId, personId, versionId
+
+1.11 Получение платежей по nonbId и списку услуг
+- сервис КУ - Orchestrator, Notification-center
+- этап заявки КУ;
+- PaymentSrvController
+- GET
+- /deals/{nonbId}/payments/active/services
+- PaymentService.getPaymentsByNonbIdAndServices
+- возвращает: Список упрощенных платежей по переданным типам услуг и nonbId
+
+1.12 Регистрация платежей в Pay
+- сервис КУ - Orchestrator;
+- этап заявки КУ;
+- PaymentSrvController
+- POST
+- /deals/{nonbId}/register/pay/payments
+- PayService.registerPaymentsByNonbId
+- возвращает: Информацию об успешности регистрации по каждому из платежей
+- Изменения:
+Создает платеж в Pay (если не создан). Устанавливает для платежа payIdentifier.
+
+// RefundSrvController
+1.13 Оформление заявки на возврат
+- сервис КУ - Mediator;
+- этап заявки КУ;
+- RefundSrvController
+- POST
+- /deals/{nonbId}/payments/{paymentId}/refund
+- RefundService.requestRefund
+- возвращает: Информацию об успешности оформления завки. В случае успеха, возвращает телефон, на который отправленна ссылка для заявки
+- Изменения:
+Обновляет данные плательщика. Изменяет статус платежа на PREREFUND. Создает / актуализирует в сервисе refund заявку на возврат (отправляет смс). Проставляет статус WAITING_FOR_REFUND_APPLICATION в sh.
+
+1.14 Получение списка причин для возврата ДС
+- сервис КУ - Mediator;
+- этап заявки КУ;
+- RefundSrvController
+- GET
+- /{nonbId}/payments/{paymentId}/refund/reasons
+- RefundService.getRefundReasons
+- возвращает: Возвращает список причин для возврада по услуге ДКП
+
+1.15 Скачивание соглашения
+- сервис КУ - Mediator;
+- этап заявки КУ;
+- RefundSrvController
+- GET
+- /deals/{nonbId}/payments/{paymentId}/refund/agreement
+- RefundService.downloadAgreementByNonbId
+- возвращает: Массив байт. Соглашение на возврат.
+
+1.16 Отправка смс клиенту на возврат
+- сервис КУ - Mediator;
+- этап заявки КУ;
+- RefundSrvController
+- POST
+- /deals/{nonbId}/payments/{paymentId}/refund/sms
+- RefundService.sendSmsByNonbDealId
+- возвращает: Информацию об успешности отправки смс. В случае успеха, возвращает телефон, на который отправленна ссылка для заявки
+- Изменения:
+Создает / актуализирует в сервисе refund заявку на возврат (отправляет смс).
+
+1.17 Отмена заявки на возврат
+- сервис КУ - Mediator;
+- этап заявки КУ;
+- RefundSrvController
+- PUT
+- /{nonbId}/payments/{paymentId}/refund/cancel
+- RefundService.cancelRefundByNonbId
+- возвращает: Ничего
+- Изменения:
+Меняет статус платежа на PAID. Меняет статус заявки на возврат на CANCELLED.
+
+2. Асинхронное (события)
+// NonbChangeRequestListener
+2.1 Обновление сделки
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbChangeRequestListener
+- NonbChangeRequestEventDto
+- NonbChangeType.DEAL_UPDATE
+- NonbEventProcessorService.processDealUpdateRequestEvent
+- Изменения:
+Проставляет nonbDealId в платежах. Обновляет данные плательщика (versionId).
+
+2.2 Создание покупателя
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbChangeRequestListener
+- NonbChangeRequestEventDto
+- NonbChangeType.NATURAL_BUYER_CREATE
+- NonbEventProcessorService.processNaturalBuyerCreatedRequestEvent
+- Изменения:
+Обновляет данные плательщика (personId и versionId).
+
+2.2 Обновление покупателя
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbChangeRequestListener
+- NonbChangeRequestEventDto
+- NonbChangeType.NATURAL_BUYER_UPDATE
+- NonbEventProcessorService.processNaturalBuyerUpdatedRequestEvent
+- Изменения:
+Обновляет данные плательщика (versionId).
+
+// NonbDealCreatedListener
+2.3 Создание сделки
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbDealCreatedListener
+- DealCreatedEvent
+-
+- NonbEventProcessorService.processDealCreateRequestEvent
+- Изменения:
+Если нет msDealId ничего не делает.
+Если есть msDealId. Обновляет nonbId в платежах.
+Для ипотеки обновляет данные по плательщику (versionId).
+Для неипотеки. Если нет платежей, то через пересчет цены пробует создать. Обновляет данные плательщика (personId и versionId). Для serviceOptions устанавливает статус платежей NOT_PAID.
+
+// NonbDealStateChangeListener
+2.4 Переход КУ в статус "Загрузка документов"
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbDealStateChangeListener
+- DealStateChangeEvent
+- STARTING, DOCUMENTS_UPLOADING
+- NonbEventProcessorService.recalculateAfterNonbDealStarting
+- Изменения:
+Обновляет nonbId в платежах. Пересчитывает цены. По serviceOptions актуализирует статусы платежей. Пересчитывает номера платежей.
+
+2.5 Переход КУ в статус "WAITING_ONREG, SIGNING_OFFER"
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbDealStateChangeListener
+- DealStateChangeEvent
+- WAITING_ONREG, SIGNING_OFFER
+- ExternalIntegrationService.updateExtServiceMetadataInServiceHub
+- Изменения:
+Обновляет данные по госпошлине в SH
+
+2.6 Переход КУ в статус "Загрузка документов"
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbDealStateChangeListener
+- DealStateChangeEvent
+- PROCESSING
+- NonbEventProcessorService.updateErregDeveloperPaymentForNonbDealInProcessing
+- Изменения:
+Если не задано значение nonbParticipantId (оплата физиком), обновляет поля платежа status = POSTPAID, payType = REGISTRY, nonbParticipantId
+
+// NonbDeletionListener
+
+2.7 Удаление КУ
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbDeletionListener
+- NonbankingDealDeletionEvent
+-
+- PaymentService.deleteBindingToServiceConstructorByNonbId
+- Изменения:
+Обнуляет поля nonbDealId и nonbParticipantId у платежей.
+
+// NonbDigitalStandardListener
+
+2.8 Старт РиР
+- сервис КУ;
+- этап заявки КУ;
+- NonbDigitalStandardListener
+- DsStartedEventDto
+-
+- DigitalStandardEventProcessorService.onStart
+- Изменения:
+Проставляет дату оказания услуги в Pay
+
+// NonbMsDealAttachedListener
+
+2.9 Привязывание msDealId к КУ
+- сервис КУ - Nonbanking-deal;
+- этап заявки КУ;
+- NonbMsDealAttachedListener
+- MsDealAttachedEvent
+-
+- NonbEventProcessorService.processMsDealIdUpdateEvent
+- Изменения:
+Обновляет nonbId в платежах по msDealId. Обновляет msDealId в детализации платежей по nonbId.
+Если платежей по nonbId нет, создает новые и запускает пересчет номеров.
+
+// UbExternalServiceStatusChangeListener
+
+2.10 Событие об отправке денег в СБР
+- сервис КУ - Orchestrator;
+- этап заявки КУ;
+- UbExternalServiceStatusChangeListener
+- ExternalServiceStateChangeEvent (SBR)
+- MONEY_SENT
+- SbrEventProcessorService.onMoneySent
+- Изменения:
+Синхронизирует данные по платежам с Pay. Сохраняет текущую дату, как дату оказания услуги по СБР. Отправляет дату оказания услуги в Pay.
+
+2.11 Событие о регистрации в СЭР
+- сервис КУ - Orchestrator;
+- этап заявки КУ;
+- UbExternalServiceStatusChangeListener
+- ExternalServiceStateChangeEvent (ONREG)
+- ALL_DOCUMENTS_SENT
+- OnregEventProcessorService.onAllDocumentsSent
+- Изменения:
+Синхронизирует данные по платежам с Pay. Сохраняет текущую дату, как дату оказания услуги по СБР. Отправляет дату оказания услуги в Pay.
