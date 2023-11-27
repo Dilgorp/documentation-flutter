@@ -1,33 +1,41 @@
+import 'package:documentation/constants/widgets.dart';
+import 'package:documentation/controllers/common/select_list_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class PanelDropdownMenu extends StatelessWidget {
-  final Set<String> items;
-  final Function(String? value) onSelected;
-  final String initialItem;
+  final String tag;
+  final Rx<SelectListController<String>?> controller = Rx(null);
 
-  const PanelDropdownMenu({
+  PanelDropdownMenu({
     super.key,
-    required this.items,
-    required this.onSelected,
-    required this.initialItem,
-  });
+    required this.tag,
+  }) {
+    controller.value = Get.find<SelectListController<String>>(tag: tag);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DropdownMenu<String>(
-      enableSearch: false,
-      inputDecorationTheme: const InputDecorationTheme(
-        outlineBorder: BorderSide.none,
-        border: InputBorder.none,
-      ),
-      initialSelection: initialItem,
-      onSelected: (String? value) {
-        onSelected(value);
-      },
-      dropdownMenuEntries:
-          items.map<DropdownMenuEntry<String>>((String value) {
-        return DropdownMenuEntry<String>(value: value, label: value);
-      }).toList(),
-    );
+    if (controller.value == null) return kNoContentWidget;
+
+    return controller.value!.obx((state) {
+      if (state == null) return kNoContentWidget;
+
+      return DropdownMenu<String>(
+        enableSearch: false,
+        inputDecorationTheme: const InputDecorationTheme(
+          outlineBorder: BorderSide.none,
+          border: InputBorder.none,
+        ),
+        initialSelection: state.items.first,
+        onSelected: (value) {
+          controller.value!.selectItem(value);
+        },
+        dropdownMenuEntries:
+            state.items.map<DropdownMenuEntry<String>>((String value) {
+          return DropdownMenuEntry<String>(value: value, label: value);
+        }).toList(),
+      );
+    });
   }
 }

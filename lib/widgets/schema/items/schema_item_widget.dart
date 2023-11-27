@@ -1,26 +1,26 @@
 import 'package:documentation/constants/strings.dart';
 import 'package:documentation/constants/text.dart';
+import 'package:documentation/controllers/schema/schema_current_item_controller.dart';
 import 'package:documentation/extensions/properties_extensions.dart';
 import 'package:documentation/model/schema_item.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 const _kBorderRadius = BorderRadius.all(Radius.circular(2));
 
-class SchemaItemWidget extends StatelessWidget {
+class SchemaItemWidget extends GetView<SchemaCurrentItemController> {
   final SchemaItem schemaItem;
-  final Function() onItemTap;
   final bool selected;
 
   const SchemaItemWidget({
     super.key,
     required this.schemaItem,
-    required this.onItemTap,
     required this.selected,
   });
 
   @override
   Widget build(BuildContext context) {
-    final description = schemaItem.description.isEmpty
+    final description = (schemaItem.description?.isEmpty ?? false)
         ? '$kReturns: ${schemaItem.properties.returns}'
         : schemaItem.description;
 
@@ -37,7 +37,7 @@ class SchemaItemWidget extends StatelessWidget {
         child: InkWell(
           borderRadius: _kBorderRadius,
           onTap: () {
-            onItemTap();
+            controller.changeSchemaItem(schemaItem);
             Scaffold.of(context).openEndDrawer();
           },
           child: Container(
@@ -61,7 +61,7 @@ class SchemaItemWidget extends StatelessWidget {
                       height: 8,
                     ),
                     Text(
-                      description,
+                      description ?? '',
                       textAlign: TextAlign.start,
                     ),
                   ],

@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 
 class SchemaItem extends Equatable {
   final String title;
-  final String description;
+  final String? description;
   final List<SchemaItemCategory> _categories = [];
   final List<SchemaItemProperty> _properties = [];
 

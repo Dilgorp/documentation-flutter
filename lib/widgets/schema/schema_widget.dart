@@ -1,27 +1,22 @@
 import 'package:documentation/constants/colors.dart';
 import 'package:documentation/constants/strings.dart';
+import 'package:documentation/constants/widgets.dart';
+import 'package:documentation/controllers/schema/schema_controller.dart';
 import 'package:documentation/extensions/list_extensions.dart';
 import 'package:documentation/model/schema_item.dart';
 import 'package:documentation/model/schema_item_category.dart';
 import 'package:documentation/widgets/schema/items/schema_item_widget.dart';
 import 'package:documentation/widgets/schema/schema_title_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class SchemaWidget extends StatelessWidget {
-  final List<SchemaItem> items;
-  final String category;
-  final Function(SchemaItem schemaItem) onItemTap;
-  final SchemaItem? selectedItem;
-
+class SchemaWidget extends GetView<SchemaController> {
   const SchemaWidget({
     super.key,
-    required this.items,
-    required this.category,
-    required this.onItemTap,
-    required this.selectedItem,
   });
 
   List<Widget> _buildSchema(
+    SchemaScreenState state,
     Map<SchemaItemCategory?, List<SchemaItem>> itemsMap,
     List<SchemaItemCategory?> keys,
   ) {
@@ -35,11 +30,8 @@ class SchemaWidget extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           vertical: 4.0, horizontal: 8.0),
                       child: SchemaItemWidget(
-                        selected: selectedItem == e,
+                        selected: state.schemaItem == e,
                         schemaItem: e,
-                        onItemTap: () {
-                          onItemTap(e);
-                        },
                       ),
                     ),
                   )
@@ -74,36 +66,40 @@ class SchemaWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemsMap = items.groupBy(
-      (item) => item.categories
-          .where((element) => element.title == category)
-          .firstOrNull,
-    );
+    return controller.obx((state) {
+      if (state == null) return kNoContentWidget;
 
-    final List<SchemaItemCategory?> keys = itemsMap.keys.toList();
-    keys.sort(schemaCategoryItemComparator);
+      final itemsMap = state.schema.items.groupBy(
+        (item) => item.categories
+            .where((element) => element.title == state.category)
+            .firstOrNull,
+      );
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Column(
-        children: [
-          Row(
-            children: _buildTitles(itemsMap, keys),
-          ),
-          Expanded(
-            child: ScrollConfiguration(
-              behavior:
-                  ScrollConfiguration.of(context).copyWith(scrollbars: false),
-              child: SingleChildScrollView(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _buildSchema(itemsMap, keys),
+      final List<SchemaItemCategory?> keys = itemsMap.keys.toList();
+      keys.sort(schemaCategoryItemComparator);
+
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Column(
+          children: [
+            Row(
+              children: _buildTitles(itemsMap, keys),
+            ),
+            Expanded(
+              child: ScrollConfiguration(
+                behavior:
+                    ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                child: SingleChildScrollView(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _buildSchema(state, itemsMap, keys),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
