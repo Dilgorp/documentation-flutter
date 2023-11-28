@@ -3,8 +3,8 @@ import 'package:documentation/constants/strings.dart';
 import 'package:documentation/constants/widgets.dart';
 import 'package:documentation/controllers/schema/schema_controller.dart';
 import 'package:documentation/extensions/list_extensions.dart';
-import 'package:documentation/model/schema_item.dart';
-import 'package:documentation/model/schema_item_category.dart';
+import 'package:documentation/model/category/view/item_category.dart';
+import 'package:documentation/model/schema/schema_item.dart';
 import 'package:documentation/widgets/schema/items/schema_item_widget.dart';
 import 'package:documentation/widgets/schema/schema_title_widget.dart';
 import 'package:flutter/material.dart';
@@ -17,11 +17,11 @@ class SchemaWidget extends GetView<SchemaController> {
 
   List<Widget> _buildSchema(
     SchemaScreenState state,
-    Map<SchemaItemCategory?, List<SchemaItem>> itemsMap,
-    List<SchemaItemCategory?> keys,
+    Map<ItemCategory?, List<SchemaItem>> itemsMap,
+    List<ItemCategory?> keys,
   ) {
     final List<Widget> result = [];
-    for (SchemaItemCategory? key in keys) {
+    for (ItemCategory? key in keys) {
       result.add(
         Column(
           children: itemsMap[key]
@@ -45,8 +45,8 @@ class SchemaWidget extends GetView<SchemaController> {
   }
 
   List<Widget> _buildTitles(
-    Map<SchemaItemCategory?, List<SchemaItem>> itemsMap,
-    List<SchemaItemCategory?> keys,
+    Map<ItemCategory?, List<SchemaItem>> itemsMap,
+    List<ItemCategory?> keys,
   ) {
     final List<Widget> result = [];
 
@@ -54,7 +54,7 @@ class SchemaWidget extends GetView<SchemaController> {
       final key = keys[i];
       result.add(
         SchemaTitleWidget(
-          title: key?.name ?? kMissing,
+          title: key?.value ?? kMissing,
           itemsCount: itemsMap[key]?.length ?? 0,
           color: kSchemaTitleColors[i % 12],
         ),
@@ -70,13 +70,21 @@ class SchemaWidget extends GetView<SchemaController> {
       if (state == null) return kNoContentWidget;
 
       final itemsMap = state.schema.items.groupBy(
-        (item) => item.categories
-            .where((element) => element.title == state.category)
-            .firstOrNull,
+        (item) {
+          final category = item.item.categories
+              .where((element) => element.category.title == state.category)
+              .firstOrNull;
+          return category == null
+              ? null
+              : ItemCategory(
+                  title: category.category.title,
+                  value: category.value,
+                );
+        },
       );
 
-      final List<SchemaItemCategory?> keys = itemsMap.keys.toList();
-      keys.sort(schemaCategoryItemComparator);
+      final List<ItemCategory?> keys = itemsMap.keys.toList();
+      keys.sort(itemCategoryComparator);
 
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,

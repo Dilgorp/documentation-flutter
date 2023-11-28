@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 Future main() async {
   await dotenv.load(fileName: '.env');
 
+  await SchemaScreenBinding().dependencies();
+
   runApp(const DocumentationApp());
 }
 
@@ -27,7 +29,7 @@ class DocumentationApp extends StatelessWidget {
         GetPage(
           name: Routes.home.path,
           page: () => const SchemaScreen(),
-          binding: SchemaScreenBinding(),
+          // binding: SchemaScreenBinding(),
         ),
       ],
     );

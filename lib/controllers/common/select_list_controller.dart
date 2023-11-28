@@ -3,14 +3,32 @@ import 'package:get/get.dart';
 
 class SelectListController<T> extends GetxController
     with StateMixin<SelectListControllerState<T>> {
-
   final Rx<T?> selectedItem = Rx(null);
+  final Rx<Set<T>> items = Rx({});
 
-  @override
-  void onInit() {
-    change(SelectListControllerState<T>(items: const {}, selectedItem: null),
-        status: RxStatus.success());
-    super.onInit();
+  Future<SelectListController<T>> init(
+      Future<Set<T>> Function() initItems) async {
+    items.value = await initItems.call();
+    if (items.value.isEmpty) {
+      change(
+        SelectListControllerState<T>(
+          items: items.value,
+          selectedItem: null,
+        ),
+        status: RxStatus.success(),
+      );
+    } else {
+      selectedItem.value = items.value.first;
+      change(
+        SelectListControllerState<T>(
+          items: items.value,
+          selectedItem: selectedItem.value,
+        ),
+        status: RxStatus.success(),
+      );
+    }
+
+    return this;
   }
 
   void selectItem(T? value) {

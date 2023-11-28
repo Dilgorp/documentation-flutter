@@ -2,7 +2,7 @@ import 'package:documentation/constants/strings.dart';
 import 'package:documentation/constants/text.dart';
 import 'package:documentation/controllers/schema/schema_current_item_controller.dart';
 import 'package:documentation/extensions/properties_extensions.dart';
-import 'package:documentation/model/schema_item.dart';
+import 'package:documentation/model/schema/schema_item.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -20,9 +20,9 @@ class SchemaItemWidget extends GetView<SchemaCurrentItemController> {
 
   @override
   Widget build(BuildContext context) {
-    final description = (schemaItem.description?.isEmpty ?? false)
-        ? '$kReturns: ${schemaItem.properties.returns}'
-        : schemaItem.description;
+    final description = (schemaItem.item.description?.isEmpty ?? false)
+        ? '$kReturns: ${schemaItem.item.properties.returns}'
+        : schemaItem.item.description;
 
     return Container(
       constraints: const BoxConstraints(
@@ -53,7 +53,7 @@ class SchemaItemWidget extends GetView<SchemaCurrentItemController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      schemaItem.title,
+                      schemaItem.item.title,
                       style: kTitleStyle,
                     ),
                     const Divider(),

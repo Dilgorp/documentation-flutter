@@ -32,7 +32,7 @@ class SchemaItemDetailWidget extends GetView<SchemaCurrentItemController> {
                 ),
                 const Divider(),
                 Text(
-                  state.title,
+                  state.item.title,
                   style: const TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,
@@ -40,11 +40,11 @@ class SchemaItemDetailWidget extends GetView<SchemaCurrentItemController> {
                 ),
                 const Divider(),
                 Visibility(
-                  visible: state.description?.isNotEmpty ?? false,
+                  visible: state.item.description?.isNotEmpty ?? false,
                   child: Column(
                     children: [
                       Text(
-                        state.description ?? '',
+                        state.item.description ?? '',
                         textAlign: TextAlign.start,
                       ),
                       const Divider(),
@@ -52,17 +52,17 @@ class SchemaItemDetailWidget extends GetView<SchemaCurrentItemController> {
                   ),
                 ),
               ] +
-              state.categories
+              state.item.categories
                   .map(
                     (category) => Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: RichText(
                         text: TextSpan(children: [
                           TextSpan(
-                            text: '${category.title}: ',
+                            text: '${category.category.title}: ',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          TextSpan(text: category.name),
+                          TextSpan(text: category.value),
                         ]),
                       ),
                     ),
@@ -71,14 +71,14 @@ class SchemaItemDetailWidget extends GetView<SchemaCurrentItemController> {
               [
                 const Divider(),
               ] +
-              state.properties
+              state.item.properties
                   .map(
                     (property) => Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: RichText(
                         text: TextSpan(children: [
                           TextSpan(
-                            text: '${property.title}: ',
+                            text: '${property.property.title}: ',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           TextSpan(text: property.value),

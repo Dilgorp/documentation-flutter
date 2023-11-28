@@ -27,7 +27,7 @@ class PanelDropdownMenu extends StatelessWidget {
           outlineBorder: BorderSide.none,
           border: InputBorder.none,
         ),
-        initialSelection: state.items.first,
+        initialSelection: state.selectedItem,
         onSelected: (value) {
           controller.value!.selectItem(value);
         },

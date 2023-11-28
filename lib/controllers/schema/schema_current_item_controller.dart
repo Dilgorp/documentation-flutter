@@ -1,4 +1,5 @@
-import 'package:documentation/model/schema_item.dart';
+import 'package:documentation/model/item/item.dart';
+import 'package:documentation/model/schema/schema_item.dart';
 import 'package:get/get.dart';
 
 class SchemaCurrentItemController extends GetxController
