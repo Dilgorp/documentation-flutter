@@ -11,11 +11,13 @@ const _kBorderRadius = BorderRadius.all(Radius.circular(2));
 class SchemaItemWidget extends GetView<SchemaCurrentItemController> {
   final SchemaItem schemaItem;
   final bool selected;
+  final bool maxWidthEnabled;
 
   const SchemaItemWidget({
     super.key,
     required this.schemaItem,
     required this.selected,
+    this.maxWidthEnabled = true,
   });
 
   @override
@@ -25,9 +27,11 @@ class SchemaItemWidget extends GetView<SchemaCurrentItemController> {
         : schemaItem.item.description;
 
     return Container(
-      constraints: const BoxConstraints(
-        maxWidth: 300.0,
-      ),
+      constraints: maxWidthEnabled
+          ? const BoxConstraints(
+              maxWidth: 300.0,
+            )
+          : const BoxConstraints(),
       decoration: const BoxDecoration(
         borderRadius: _kBorderRadius,
       ),

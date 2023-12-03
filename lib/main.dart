@@ -1,5 +1,5 @@
-import 'package:documentation/bindings/schema_screen_bindings.dart';
-import 'package:documentation/screens/schema_screen.dart';
+import 'package:documentation/bindings/schema_table_screen_bindings.dart';
+import 'package:documentation/screens/schema_table_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 Future main() async {
   await dotenv.load(fileName: '.env');
 
-  await SchemaScreenBinding().dependencies();
+  await SchemaTableScreenBinding().dependencies();
 
   runApp(const DocumentationApp());
 }
@@ -28,7 +28,7 @@ class DocumentationApp extends StatelessWidget {
       getPages: [
         GetPage(
           name: Routes.home.path,
-          page: () => const SchemaScreen(),
+          page: () => const SchemaTableScreen(),
           // binding: SchemaScreenBinding(),
         ),
       ],
@@ -36,9 +36,10 @@ class DocumentationApp extends StatelessWidget {
   }
 }
 
-enum Routes{
+enum Routes {
   home('/');
 
   const Routes(this.path);
+
   final String path;
 }

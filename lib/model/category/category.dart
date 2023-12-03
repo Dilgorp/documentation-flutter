@@ -20,4 +20,6 @@ class Category extends Equatable {
       _$CategoryFromJson(json);
 
   Map<String, dynamic> toJson() => _$CategoryToJson(this);
+
+  Category copy() => Category(id: id, title: title);
 }

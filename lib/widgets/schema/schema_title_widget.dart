@@ -8,12 +8,14 @@ class SchemaTitleWidget extends StatelessWidget {
   final String title;
   final int itemsCount;
   final Color color;
+  final bool showItemCount;
 
   const SchemaTitleWidget({
     super.key,
     required this.title,
     required this.itemsCount,
     this.color = Colors.white,
+    this.showItemCount = true,
   });
 
   @override
@@ -45,10 +47,10 @@ class SchemaTitleWidget extends StatelessWidget {
                   style: kTitleStyle,
                   textAlign: TextAlign.start,
                 ),
-                Text(
+                showItemCount ? Text(
                   '$kOfElements: $itemsCount',
                   textAlign: TextAlign.start,
-                ),
+                ) : Container(),
               ],
             ),
           ),
